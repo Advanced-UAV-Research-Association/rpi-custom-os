@@ -1,0 +1,24 @@
+FROM https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-12-04/2025-12-04-raspios-trixie-arm64-lite.img.xz
+# TO aura-image.img
+
+# make room to install packages
+PUMP 100M
+
+# update repos
+RUN apt update
+# install required packages
+RUN apt install -y libeigen3-dev
+
+# create program user
+# user: aura,	password: password
+RUN useradd -m -s /bin/bash aura
+RUN bash -c "echo \"aura:password\" | chpasswd"
+RUN usermod -aG sudo,dialout,gpio,i2c,spi aura
+
+# configure uart, enables uart port and creates a uart shell
+RUN raspi-config nonint do_serial_hw 0
+RUN raspi-config nonint do_serial_cons 0
+
+# shrink image back down, removes uneccessary space
+SHRINK
+
