@@ -9,15 +9,21 @@ RUN apt update
 # install required packages
 RUN apt install -y libeigen3-dev
 
-# create program user
-# user: aura,	password: password
-RUN useradd -m -s /bin/bash aura
-RUN bash -c "echo \"aura:password\" | chpasswd"
-RUN usermod -aG sudo,dialout,gpio,i2c,spi aura
+# set root password
+# user: root, password: password
+RUN bash -c "echo \"root:password\" | chpasswd"
 
 # configure uart, enables uart port and creates a uart shell
 RUN raspi-config nonint do_serial_hw 0
 RUN raspi-config nonint do_serial_cons 0
+
+# create systemd override directories for serial auto-login
+RUN mkdir -p /etc/systemd/system/serial-getty@ttyAMA0.service.d
+RUN mkdir -p /etc/systemd/system/serial-getty@ttyS0.service.d
+
+# install serial auto-login configuration for both common uart devices
+INSTALL image/serial-autologin.conf /etc/systemd/system/serial-getty@ttyAMA0.service.d/autologin.conf
+INSTALL image/serial-autologin.conf /etc/systemd/system/serial-getty@ttyS0.service.d/autologin.conf
 
 # shrink image back down, removes uneccessary space
 SHRINK
